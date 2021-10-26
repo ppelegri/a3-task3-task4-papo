@@ -1,0 +1,73 @@
+---
+title: "Naples Reef (PELEGRI)"
+author: "Patrick Pelegri-O'Day"
+date: "10/24/2021"
+output: html_document
+---
+
+### Overview
+[Insert text]
+
+**Data:** Reed, D. 2020. SBC LTER: Reef: Long-term experiment: Kelp removal: Urchin size frequency distribution ver 20. Environmental Data Initiative. https://doi.org/10.6073/pasta/5a1e9ef03aa47bd2225c0bb98a02a63b. 
+
+**Data description:** Data contain observations of red and purple urchins observed at 5 locations along the Santa Barbara coast. Data have been updated from their raw version for this assignment. See complete description and metadata (here)[https://sbclter.msi.ucsb.edu/data/catalog/package/?package=knb-lter-sbc.26]
+
+### Setup
+
+Attach packages: `tidyverse`, `here`, `janitor`, `lubridate`, `kableExtra`
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+```
+
+Read in the data
+```{r}
+urchins <- 
+  read_csv(show_col_types = FALSE, here("data", "urchins.csv"))
+```
+
+### Data wrangling
+
+Only include Naples Reef observations for purple urchins observed in 2010
+```{r}
+purple_urchins_naples <- urchins %>% 
+  clean_names() %>% # apply `clean_names()` to convert column names to lower_snake_case
+  mutate(date = mdy(date)) %>%  # replace original date column with new date column in YYYY-MM-DD format in which column class is "Date"
+  mutate(year = year(date)) %>% # create new column called year that contains the year, derived from the date column
+  filter(year == "2010") %>%  # only retain observations where year is 2010
+  filter(common_name == "Purple Urchin") %>%  # only retain observations where species common name is Purple Urchin
+  filter(site == "NAPL") # only retain observations where site is Naples Reef, abbreviated as NAPL
+```
+
+### Exploring urchin data visually
+
+Explore data with faceted Q-Q plots
+```{r}
+ggplot(data = purple_urchins_naples, aes(sample = size, color = treatment)) +
+  geom_qq(geom = "point") +
+  geom_qq_line() + 
+  facet_wrap(~treatment)
+```
+
+Explore data with faceted histogram plots
+```{r}
+ggplot(data = purple_urchins_naples, aes(x = size, fill = treatment)) +
+  geom_histogram() +
+  facet_wrap(~treatment)
+```
+
+"Annual" means that the urchin was in a treatment group, and "control" means the urchin was in a control group
+```{r}
+naples_urchins_summary <- purple_urchins_naples %>% # start with purple_urchins_naples
+   group_by(treatment) %>% # group by whether the urchin was in a treatment site or not
+   summarize(mean = mean(size, na.rm = TRUE),
+             sd = sd(size, na.rm = TRUE),
+             median = median(size, na.rm = TRUE),
+             sample_size = n()
+   )
+
+kable(naples_urchins_summary,
+      col = c("Treatment", "Mean Size (cm)", "Standard deviation", "Median Size (cm)", "Sample Size"),
+      caption = "Caption") %>% 
+  kable_styling(full_width = FALSE)
+```
+
