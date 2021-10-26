@@ -1,0 +1,113 @@
+---
+title: "SB Urchins (PELEGRI)"
+author: "Patrick Pelegri-O'Day"
+date: "10/23/2021"
+output: html_document
+---
+
+### Overview
+In this document, data on urchin size and species collected from five sites along the Santa Barbara coast from 2008 to 2020 are wrangled and visualized. Size distribution of red and purple urchins are compared, and the trajectory of purple urchin counts over time are visualized and discussed.
+
+**Data:** Reed, D. 2020. SBC LTER: Reef: Long-term experiment: Kelp removal: Urchin size frequency distribution ver 20. Environmental Data Initiative. https://doi.org/10.6073/pasta/5a1e9ef03aa47bd2225c0bb98a02a63b. 
+
+**Data description:** Data contain observations of red and purple urchins observed at 5 locations along the Santa Barbara coast. Data have been updated from their raw version for this assignment. See complete description and metadata [here](https://sbclter.msi.ucsb.edu/data/catalog/package/?package=knb-lter-sbc.26)
+
+### Setup
+
+Attach packages
+```{r setup, include=TRUE, warning = FALSE, message = FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+
+library(tidyverse)
+library(here)
+library(janitor)
+library(lubridate)
+library(kableExtra)
+```
+
+Read in the data
+```{r}
+urchins <- 
+  read_csv(show_col_types = FALSE, here("data", "urchins.csv"))
+```
+
+### Initial data wrangling
+
+Convert column names to lower_snake_case and convert date column to YYYY-MM-DD format and column class to "Date"
+```{r}
+urchins_clean <- # creating a new data frame called "urchins_clean"
+  clean_names(urchins) %>% # applying `clean_names()` to convert column names to lower_snake_case
+  mutate(date = mdy(date)) # replace original date column with new date column in YYYY-MM-DD format in which column class is "Date"
+```
+
+
+### Visually compare distribution of sizes between red and purple urchins
+
+Create faceted histogram based on urchin size
+```{r, fig.cap = "**Figure 1: Distribution of red and purple urchins by size in Santa Barbara.** The distribution of red and purple urchins by size (cm), rounded to the nearest 0.5cm, is displayed. Observations were taken at five sites along the Santa Barbara coast."}
+ggplot(data = urchins_clean, aes(x = size, fill = common_name)) + # histogram will be based on urchin size; colors are according to species
+  geom_histogram(binwidth = 0.5, bins = 10) + # use geom_histogram to create histogram
+  facet_wrap(~common_name) + # use facet_wrap() to facet the histogram, here based on common_name
+  labs(x = "Urchin size (cm)", y = "Number of urchins", fill = "Species")
+```
+
+### Summary table for red and purple urchins
+
+Calculate summary statistics for red and purple urchins, then display results in a table
+```{r}
+urchins_stats <- urchins_clean %>% # start with urchins_clean
+   group_by(common_name) %>% # group by species (using column common_name)
+   summarize(mean = round(mean(size, na.rm = TRUE), 1), # find mean size and round to 1 decimal point
+             sd = round(sd(size, na.rm = TRUE), 1), # find sd of size distribution and round to 1 decimal point
+             median = median(size, na.rm = TRUE), # find median size
+             sample_size = n() # count sample size
+   )
+
+kable(urchins_stats, # create table
+      col = c("Species", "Mean Size (cm)", "Standard deviation", "Median Size (cm)", "Sample Size"), # assign column names
+      caption = "Table 1: Summary statistics on size of puruple and red urchins") %>% 
+  kable_styling(full_width = FALSE) # make table narrower
+```
+
+**Takeaway:** Compared to the Red Urchins, The Purple Urchins have a smaller mean and median size, and a tighter spread. The Purple Urchins are quite a bit smaller. Their median size is 2.5 cm smaller than the median size of Red Urchins; in percentage terms the Purple Urchins are 36% than the Red Urchins. 
+
+### Purple urchin counts by site and year
+
+Wrangle data to only include purple urchin observations, and create new columns for year and full site name
+```{r}
+purple_urchins <- urchins_clean %>% # note that the date column in urchins_clean is already converted to class Date because of code in ### Initial data wrangling section
+  filter(common_name == "Purple Urchin") %>% # retain only observations where common_name is Purple Urchin
+  mutate(year = year(date)) %>% # create new column called year that contains the year, derived from the date column
+  mutate(site_full = case_when( # add a new column site_full, which contains...
+    site %in% c("NAPL") ~ "Naples Reef", # "Naples Reef" if site is "NAPL"
+    site %in% c("AQUE") ~ "Arroyo Quemado Reef", # "Arroyo Quemado Reef" if site is "AQUE"
+    site %in% c("CARP") ~ "Carpinteria Reef", # "Carpinteria Reef" if site is "CARP"
+    site %in% c("MOHK") ~ "Mohawk Reef", # "Mohawk Reef" if site is "MOHK"
+    site %in% c("IVEE") ~ "Isla Vista Reef", # "Isla Vista Reef" if site is "IVEE"
+  ))
+```
+
+Store a table containing the total number of purple urchins observed by site and year. 
+```{r}
+purple_urchin_stats <- purple_urchins %>%  # start from purple_urchins
+  group_by(site_full, year) %>% # group by site (full name) and year
+  summarize(population = n()) # count population
+```
+
+Make a finalized graph of counts of purple urchins recorded at each site over time for the years included in the study
+```{r, fig.cap = "**Figure 2: Count of Purple Urchins in Santa Barbara.** This graph displays counts of purple urchins at five sites along the Santa Barbara coast. The observation period spans 2008 to 2020."}
+ggplot(purple_urchin_stats, # make a graph using purple_urchin_summary
+       aes(x = year, # with year on the x-axis
+           y = population, # and population on the y-axis
+           fill = site_full)) + # set fill color of the bars to be based on the site the sample was drawn from
+  geom_col(position = "dodge", width = 0.7) + # make it a bar graph. position = "dodge" sets the bars next to each other
+  # facet_wrap(~site_full) + # facet the graph by site_full
+  scale_fill_manual(values = c("Arroyo Quemado Reef" = "chocolate3", # set custom colors for each site
+                                "Carpinteria Reef" = "burlywood4",
+                                "Isla Vista Reef" = "darkgreen",
+                                "Mohawk Reef" = "goldenrod3",
+                                "Naples Reef" = "deepskyblue3")) +
+  labs(x = "Year", y = "Number of urchins", fill = "Site", )
+```
+
+**Takeaway:** This series of graphs shows a general decline in the population of purple urchins sampled at all five sites. This does not necessarily mean that the actual populations have declined, however. If the sites were sampled in a consistent way, such as using a series of transects or quadrats, over a large enough area, then we might conclude that the decline in the counted number of urchins represents a decline in the actual population of urchins in that area. If we counted in fewer places, or different places, as the years went on, then we might simply be counting fewer urchins even though the true size of the population is remaining constant or increasing.
