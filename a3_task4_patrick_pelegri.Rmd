@@ -6,17 +6,23 @@ output: html_document
 ---
 
 ### Overview
-[Insert text]
+This document wrangles then explores data on purple urchins in Naples Reef. The urchins are divided into treatment and control groups. Summary statistics related to central tendency and spread of urchin size are presented.
 
 **Data:** Reed, D. 2020. SBC LTER: Reef: Long-term experiment: Kelp removal: Urchin size frequency distribution ver 20. Environmental Data Initiative. https://doi.org/10.6073/pasta/5a1e9ef03aa47bd2225c0bb98a02a63b. 
 
-**Data description:** Data contain observations of red and purple urchins observed at 5 locations along the Santa Barbara coast. Data have been updated from their raw version for this assignment. See complete description and metadata (here)[https://sbclter.msi.ucsb.edu/data/catalog/package/?package=knb-lter-sbc.26]
+**Data description:** Data contain observations of red and purple urchins observed at 5 locations along the Santa Barbara coast. Data have been updated from their raw version for this assignment. See complete description and metadata [here](https://sbclter.msi.ucsb.edu/data/catalog/package/?package=knb-lter-sbc.26)
 
 ### Setup
 
-Attach packages: `tidyverse`, `here`, `janitor`, `lubridate`, `kableExtra`
-```{r setup, include=FALSE}
+Attach packages
+```{r setup, include=TRUE, message = FALSE, warning = FALSE}
 knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+
+library(tidyverse)
+library(here)
+library(janitor)
+library(lubridate)
+library(kableExtra)
 ```
 
 Read in the data
@@ -42,32 +48,39 @@ purple_urchins_naples <- urchins %>%
 
 Explore data with faceted Q-Q plots
 ```{r}
-ggplot(data = purple_urchins_naples, aes(sample = size, color = treatment)) +
-  geom_qq(geom = "point") +
-  geom_qq_line() + 
-  facet_wrap(~treatment)
+ggplot(data = purple_urchins_naples, aes(sample = size, color = treatment)) + # define dataset and variables for plot
+  geom_qq(geom = "point") + # create Q-Q plot
+  geom_qq_line() + # run line of best fit through Q-Q plot
+  facet_wrap(~treatment) # facet the graph according to whether the data are from treatment or control group
 ```
 
 Explore data with faceted histogram plots
 ```{r}
-ggplot(data = purple_urchins_naples, aes(x = size, fill = treatment)) +
-  geom_histogram() +
-  facet_wrap(~treatment)
+ggplot(data = purple_urchins_naples, aes(x = size, fill = treatment)) + # define dataset and variables for plot
+  geom_histogram() + # make histogram graph
+  facet_wrap(~treatment) # facet the graph according to whether the data are from treatment or control group
 ```
 
-"Annual" means that the urchin was in a treatment group, and "control" means the urchin was in a control group
+### Create summary table for purple urchin treatment and control groups
+
+Create data frame that stores descriptive statistic values
 ```{r}
+# Note: "Annual" means that the urchin was in a treatment group, and "control" means the urchin was in a control group
+
 naples_urchins_summary <- purple_urchins_naples %>% # start with purple_urchins_naples
    group_by(treatment) %>% # group by whether the urchin was in a treatment site or not
-   summarize(mean = mean(size, na.rm = TRUE),
-             sd = sd(size, na.rm = TRUE),
-             median = median(size, na.rm = TRUE),
-             sample_size = n()
+   summarize(mean = round(mean(size, na.rm = TRUE), 1), # find mean size, round to 1 decimal
+             sd = round(sd(size, na.rm = TRUE), 1), # find standard deviation based on size, round to 1 decimal
+             median = median(size, na.rm = TRUE), # find median size
+             sample_size = n() # find sample size
    )
+```
 
+Create summary table that visualizes those descriptive statistics
+```{r}
 kable(naples_urchins_summary,
       col = c("Treatment", "Mean Size (cm)", "Standard deviation", "Median Size (cm)", "Sample Size"),
-      caption = "Caption") %>% 
+      caption = "Table 1: Summary statistics for Purple Urchins observed in Naples Reef, comparing treatment (ANNUAL) and control (CONTROL) groups") %>% 
   kable_styling(full_width = FALSE)
 ```
 
