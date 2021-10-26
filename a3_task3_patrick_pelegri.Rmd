@@ -15,7 +15,7 @@ output: html_document
 ### Setup
 
 Attach packages: `tidyverse`, `here`, `janitor`, `lubridate`, `kableExtra`
-```{r setup, include=FALSE}
+```{r setup, include=TRUE, warning = FALSE, message = FALSE}
 knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
 
 library(tidyverse)
@@ -45,36 +45,29 @@ urchins_clean <- # creating a new data frame called "urchins_clean"
 
 Create faceted histogram based on urchin size
 ```{r, fig.cap = "**Figure 1: Distribution of red and purple urchins by size in Santa Barbara.** The distribution of red and purple urchins by size (cm), rounded to the nearest 0.5cm, is displayed. Observations were taken at five sites along the Santa Barbara coast.}
-ggplot(data = urchins_clean, aes(x = size) + # histogram will be based on urchin size
+ggplot(data = urchins_clean, aes(x = size, fill = common_name)) + # histogram will be based on urchin size, colors according to species
   geom_histogram(binwidth = 0.5, bins = 10) + # use geom_histogram to create histogram
   facet_wrap(~common_name) + # use facet_wrap() to facet the histogram, here based on common_name
-  labs(x = "Urchin size (cm)", y = "Number of urchins"))
+  labs(x = "Urchin size (cm)", y = "Number of urchins")
 ```
 
 ### Summary table for red and purple urchins
-- figure out how to display sample size
-- use kableExtra to display table
-  - figure out how to use kable styling
 - insert table caption **above** the table
-- consider: 
-  - are the values a reasonable number of significant figures? You can put options(digits = 4) right under the knitr::opts() line in the setup code chunk.
-  - have i updated column names to be finalized (with units)?
+
 
 ```{r}
-urchins_summary <- urchins_clean %>% # start with urchins_clean
-   group_by(common_name) %>% # group by species
-   summarize(mean_size = mean(size, na.rm = TRUE),
-             sd_size = sd(size, na.rm = TRUE),
-             median_size = median(size, na.rm = TRUE),
-             sample_size = n() # how to use count() properly?
+urchins_stats <- urchins_clean %>% # start with urchins_clean
+   group_by(common_name) %>% # group by species (using column common_name)
+   summarize(mean = round(mean(size, na.rm = TRUE), 1), # find mean size and round to 1 decimal point
+             sd = round(sd(size, na.rm = TRUE), 1), # find sd of size and round to 1 decimal point
+             median = median(size, na.rm = TRUE), # find median size
+             sample_size = n() # count sample size
    )
 
-kable(urchins_summary,
-      col = c("Species", "Mean Size (cm)", "Standard deviation", "Median Size", "Sample Size"),
-      caption = "Caption") %>% 
-  kable_styling(full_width = FALSE)
-
-# How to use kableExtra?
+kable(urchins_stats, # create table
+      col = c("Species", "Mean Size (cm)", "Standard deviation", "Median Size (cm)", "Sample Size"), # list column names
+      caption = "Table 1: Summary statistics on size of puruple and red urchins") %>% 
+  kable_styling(full_width = FALSE) # make table narrower
 ```
 
 Compared to the Red Urchins, The Purple Urchins have a smaller mean and median size, and a tighter spread. The Purple Urchins are quite a bit smaller. Their median size is 2.5 cm, or 36%, smaller than the median size of Red Urchins. 
