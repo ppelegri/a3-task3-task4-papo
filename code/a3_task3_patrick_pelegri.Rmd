@@ -65,11 +65,11 @@ urchins_stats <- urchins_clean %>% # start with urchins_clean
 
 kable(urchins_stats, # create table
       col = c("Species", "Mean Size (cm)", "Standard deviation", "Median Size (cm)", "Sample Size"), # assign column names
-      caption = "Table 1: Summary statistics on size of puruple and red urchins") %>% 
+      caption = "Table 1: Summary statistics on size of purple and red urchins") %>% 
   kable_styling(full_width = FALSE) # make table narrower
 ```
 
-**Takeaway:** Compared to the Red Urchins, The Purple Urchins have a smaller mean and median size, and a tighter spread. The Purple Urchins are quite a bit smaller. Their median size is 2.5 cm smaller than the median size of Red Urchins; in percentage terms the Purple Urchins are 36% than the Red Urchins. 
+**Takeaway:** Compared to the Red Urchins, The Purple Urchins have a smaller mean and median size, and a tighter spread. The Purple Urchins are quite a bit smaller. Their mean size is 2.3 cm smaller than the mean size of Red Urchins; in percentage terms the Purple Urchins are 34% smaller than the Red Urchins on average. 
 
 ### Purple urchin counts by site and year
 
