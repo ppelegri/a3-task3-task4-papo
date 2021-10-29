@@ -94,14 +94,13 @@ purple_urchin_stats <- purple_urchins %>%  # start from purple_urchins
   summarize(population = n()) # count population
 ```
 
-Make a finalized graph of counts of purple urchins recorded at each site over time for the years included in the study
-```{r, fig.cap = "**Figure 2: Count of Purple Urchins in Santa Barbara.** This graph displays counts of purple urchins at five sites along the Santa Barbara coast. The observation period spans 2008 to 2020."}
+Make a graph of counts of purple urchins recorded at each site over time for the years included in the study. The graph below compares the purple urchin count at all sites on the same graph to get a sense of the trend for all sites as a whole.
+```{r, fig.cap = "**Figure 2: Count of Purple Urchins in Santa Barbara.** This graph displays counts of purple urchins at five sites along the Santa Barbara coast with a single bar graph. The observation period spans 2008 to 2020."}
 ggplot(purple_urchin_stats, # make a graph using purple_urchin_summary
        aes(x = year, # with year on the x-axis
            y = population, # and population on the y-axis
            fill = site_full)) + # set fill color of the bars to be based on the site the sample was drawn from
   geom_col(position = "dodge", width = 0.7) + # make it a bar graph. position = "dodge" sets the bars next to each other
-  # facet_wrap(~site_full) + # facet the graph by site_full
   scale_fill_manual(values = c("Arroyo Quemado Reef" = "chocolate3", # set custom colors for each site
                                 "Carpinteria Reef" = "burlywood4",
                                 "Isla Vista Reef" = "darkgreen",
@@ -110,4 +109,24 @@ ggplot(purple_urchin_stats, # make a graph using purple_urchin_summary
   labs(x = "Year", y = "Number of urchins", fill = "Site", )
 ```
 
-**Takeaway:** This series of graphs shows a general decline in the population of purple urchins sampled at all five sites. This does not necessarily mean that the actual populations have declined, however. If the sites were sampled in a consistent way, such as using a series of transects or quadrats, over a large enough area, then we might conclude that the decline in the counted number of urchins represents a decline in the actual population of urchins in that area. If we counted in fewer places, or different places, as the years went on, then we might simply be counting fewer urchins even though the true size of the population is remaining constant or increasing.
+The graph below facets the purple urchin population count for each site into its own line graph so that trends for each site are more easily understood.
+```{r, fig.cap = "**Figure 3: Count of Purple Urchins in Santa Barbara.** This graph displays counts of purple urchins at five sites along the Santa Barbara coast through a series of faceted line graphs. The observation period spans 2008 to 2020."}
+ggplot(purple_urchin_stats, # make a graph using purple_urchin_summary
+       aes(x = year, # with year on the x-axis
+           y = population, # and population on the y-axis
+           color = site_full)) + # set line color to be based on the site the sample was drawn from
+  geom_line() + # plot a line graph
+  facet_wrap(~site_full) + # facet the graph by site_full
+  theme(panel.spacing.x = unit(1, "lines")) + # space out panels horizontally
+  scale_x_continuous(limits=c(2008,2020), breaks = c(2008, 2014, 2020)) + # customize x-axis scale to fit the graph size 
+  scale_y_continuous(limits=c(0,1200)) +
+    scale_color_manual(values = c("Arroyo Quemado Reef" = "chocolate3", # set custom colors for each site to match the graph above
+                                "Carpinteria Reef" = "burlywood4",
+                                "Isla Vista Reef" = "darkgreen",
+                                "Mohawk Reef" = "goldenrod3",
+                                "Naples Reef" = "deepskyblue3")) +
+  labs(x = "Year", y = "Number of urchins", color = "Site", )
+```
+
+
+**Takeaway:** This series of graphs shows a general decline in the population of purple urchins sampled at all five sites from 2009 to 2020. (For the sites where data were collected in 2008, there was a jump in urchin count from 2008 to 2009.) This does not necessarily mean that the actual populations have declined, however. If the sites were sampled in a consistent way over a large enough area, then we might conclude that the decline in the counted number of urchins represents a decline in the actual population of urchins in that area. If we counted in fewer places or different places as the years went on, or we had reason to believe that urchin populations were declining in the locations we sampled but staying steady or increasing in other areas within the site, then we might simply be counting fewer urchins even though the true size of the population is remaining constant or increasing.
